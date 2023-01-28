@@ -3,18 +3,20 @@
 #include <ctime>
 #include <unistd.h>
 #include <conio.h>
+#include <windows.h>
 
 using namespace std;
 
 const int row = 9;
 const int column = 9;
-const char bomb = '*';
+const char mine = '*';
 const char blank = '#';
 char mainBoard[row][column];
 char hiddenBoard[row][column];
 string firstPlayer;
 string secondPlayer;
-int firstPlayerPoint = 0, secondPlayerPoint = 0;
+int firstPlayerPoint = 0, secondPlayerPoint = 0, minesNum = 0;
+HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
 void mainMenu();
 int getChoice();
@@ -27,7 +29,7 @@ void minesGen(char[row][column]);
 void numbersGen(char[row][column]);
 void play(char[row][column], char[row][column]);
 void switchPlayers(int&);
-void checkExit();
+void checkExit(int);
 
 int main()
 {
@@ -58,6 +60,7 @@ int main()
 
 void mainMenu()
 {
+    SetConsoleTextAttribute(hConsole, 14);
     cout << "\t->1) Play" << endl;
     cout << "\t  2) How to play" << endl;
     cout << "\t  3) Quit Program" << endl << endl;
@@ -66,12 +69,15 @@ void mainMenu()
 int getChoice()
 {
     int choice;
+    SetConsoleTextAttribute(hConsole, 11);
     cout << "Enter your choice: ";
     cin >> choice;
     while (choice < 1 || choice > 3)
     {
+        SetConsoleTextAttribute(hConsole, 12);
         cout << "The only valid choices are 1-3, Please re-enter." << endl << endl;
         mainMenu();
+        SetConsoleTextAttribute(hConsole, 11);
         cout << "Enter your choice: ";
         cin >> choice;
     }
@@ -81,7 +87,9 @@ int getChoice()
 void help()
 {
     system("cls");
+    SetConsoleTextAttribute(hConsole, 10);
     cout << "\tHOW TO PLAY?\n";
+    SetConsoleTextAttribute(hConsole, 3);
     cout << "\t\tMinesweeper is a game where mines are hidden in a grid of squares.\n"
     "\t\tSafe squares have numbers telling you how many mines touch the square.\n"
     "\t\tYou can use the number clues to find the remaining mines.\n"
@@ -92,10 +100,15 @@ void help()
 void getPlayersName(string &x, string &y)
 {
     system("cls");
-    cout << "press ESC or x to exit the game when playing..." << endl;
+    SetConsoleTextAttribute(hConsole, 3);
+    cout << "\t\t\t\t\tNOTE: press ESC or x to exit the game when playing...\n" << endl;
+    SetConsoleTextAttribute(hConsole, 7);
     cout << "Enter first player's name: " << endl;
+    SetConsoleTextAttribute(hConsole, 1);
     cin >> x;
+    SetConsoleTextAttribute(hConsole, 7);
     cout << "Enter second player's name: " << endl;
+    SetConsoleTextAttribute(hConsole, 4);
     cin >> y;
     if (x == y){
         x += "1";
@@ -115,19 +128,32 @@ void boardReform(char board[row][column])
 {
     for(int i = 0; i < 9; i++)
         board[0][i] = blank;
+    for(int i = 0; i < 9; i++)
+        for(int j = 0; j < 9; j++)
+            if(board[i][j] == mine)
+                minesNum++;
 }
 
 void boardDisplay(char board[row][column]){
     system("cls");
+    SetConsoleTextAttribute(hConsole, 14);
     cout << "    ";
     for(int i = 0; i < 9; i++){
         for(int j = 0; j < 8; j++){
             if (i == 0)
+            {
+                SetConsoleTextAttribute(hConsole, 8);
                 cout << j + 1 << "   ";
+            }
+
             else
             {
                 if(j == 0)
+                {
+                    SetConsoleTextAttribute(hConsole, 8);
                     cout << i << "   ";
+                }
+                SetConsoleTextAttribute(hConsole, 14);
                 cout << board[i][j] <<  "   " ;
             }
 
@@ -135,19 +161,26 @@ void boardDisplay(char board[row][column]){
      cout << endl;
      }
      cout << endl;
-     cout << "\t\t\t\t\t" << firstPlayer << " point: " << firstPlayerPoint << endl;
-     cout << "\t\t\t\t\t" << secondPlayer << " point: " << secondPlayerPoint << endl;
+     SetConsoleTextAttribute(hConsole, 2);
+     cout << "There are " << minesNum << " mines in this game. Try to find them!" << endl << endl;
+     SetConsoleTextAttribute(hConsole, 6);
+     cout << "\t\t\t\t\t ScoreBoard:" << endl;
+    // cout << "\t\t\t\t\t----------------" << endl;
+     cout << "\t\t\t\t\t|" << firstPlayer << " point: " << firstPlayerPoint << endl;
+     cout << "\t\t\t\t\t|" << secondPlayer << " point: " << secondPlayerPoint << endl;
+    // cout << "\t\t\t\t\t----------------" << endl;
+
 }
 
 
 void minesGen(char board[row][column])
 {
     int row, column;
-    for (int i = 0; i < 13; i++)
+    for (int i = 0; i < 14; i++)
     {
         row = rand() % 8;
         column = rand() % 8;
-        board[row][column] = bomb;
+        board[row][column] = mine;
     }
 }
 
@@ -158,23 +191,23 @@ void numbersGen(char board[row][column])
     {
         for (int j = 0; j < 9; j++)
         {
-            if (board[i][j] != '*')
+            if (board[i][j] != mine)
             {
-                if (i > 0 && board[i - 1][j] == '*')
+                if (i > 0 && board[i - 1][j] == mine)
                     count++;
-                if (i > 0 && j > 0 && board[i - 1][j - 1] == '*')
+                if (i > 0 && j > 0 && board[i - 1][j - 1] == mine)
                     count++;
-                if (i > 0 && j < 9 && board[i - 1][j + 1] == '*')
+                if (i > 0 && j < 9 && board[i - 1][j + 1] == mine)
                     count++;
-                if (j > 0 && board[i][j - 1] == '*')
+                if (j > 0 && board[i][j - 1] == mine)
                     count++;
-                if (j < 9 && board[i][j + 1] == '*')
+                if (j < 9 && board[i][j + 1] == mine)
                     count++;
-                if (i < 9 && j > 0 && board[i + 1][j - 1] == '*')
+                if (i < 9 && j > 0 && board[i + 1][j - 1] == mine)
                     count++;
-                if (i < 9 && board[i + 1][j] == '*')
+                if (i < 9 && board[i + 1][j] == mine)
                     count++;
-                if (i < 9 && j < 9 && board[i + 1][j + 1] == '*')
+                if (i < 9 && j < 9 && board[i + 1][j + 1] == mine)
                     count++;
                 board[i][j] = count + '0';
                 count = 0;
@@ -192,24 +225,27 @@ void play(char mainBoard[row][column], char hiddenBoard[row][column])
         boardDisplay(mainBoard);
         switchPlayers(count);
         char choice;
-        cout << "Enter row: ";
-        checkExit();
+        SetConsoleTextAttribute(hConsole, 12);
+        cout << "(Press x or Esc to forfeit, any key to continue)";
+        checkExit(count);
+        cout << "\r                                                 ";
+        SetConsoleTextAttribute(hConsole, 11);
+        cout << "\rEnter row: ";
         cin >> row;
         cout << "Enter column: ";
-        checkExit();
         cin >> column;
         while (row <= 0 || row > 8 || column <= 0 || column > 8)
         {
-            cout << "Invalid input! Please enter row and column between 0 and 8." << endl;
+            SetConsoleTextAttribute(hConsole, 12);
+            cout << "Invalid input! Please enter row and column between 1 to 8." << endl;
+            SetConsoleTextAttribute(hConsole, 11);
             cout << "Enter row: ";
-            checkExit();
             cin >> row;
             cout << "Enter column: ";
-            checkExit();
             cin >> column;
         }
         column -= 1;
-        if (hiddenBoard[row][column] == '*')
+        if (hiddenBoard[row][column] == mine)
         {
             if(count % 2)
                 secondPlayerPoint++;
@@ -217,28 +253,36 @@ void play(char mainBoard[row][column], char hiddenBoard[row][column])
                 firstPlayerPoint++;
             mainBoard[row][column] = hiddenBoard[row][column];
             boardDisplay(mainBoard);
-            if((firstPlayerPoint == 6) && (secondPlayerPoint == 6))
+            if((firstPlayerPoint == minesNum/2) && (secondPlayerPoint == minesNum/2))
             {
-                cout << "^^^^^^^ What a game! Tie it is!^^^^^^^";
+                SetConsoleTextAttribute(hConsole, 13);
+                cout << "^^^^^^^ What a game! Tie it is! ^^^^^^^";
                 play = false;
                 exit(0);
             }
-            if(firstPlayerPoint == 7)
+            if(firstPlayerPoint == (minesNum / 2) + 1)
             {
-                cout << "****** " << firstPlayer << " won the game! ******";
+                SetConsoleTextAttribute(hConsole, 10);
+                cout << "****** \"" << firstPlayer << "\" won the game! ******";
                 play = false;
                 exit(0);
             }
-            if(secondPlayerPoint == 7)
+            if(secondPlayerPoint == (minesNum / 2) + 1)
             {
-                cout << "****** " << secondPlayer << " won the game! ******";
+                SetConsoleTextAttribute(hConsole, 10);
+                cout << "****** \"" << secondPlayer << "\" won the game! ******";
                 play = false;
                 exit(0);
             }
             hiddenBoard[row][column] = blank;
         }
-
-        else if (hiddenBoard[row][column] != '#')
+        else if((mainBoard[row][column] != mine) && (mainBoard[row][column] != blank))
+        {
+            SetConsoleTextAttribute(hConsole, 12);
+            cout << "This point was found. Select another one!" << endl;
+            sleep(3);
+        }
+        else if (hiddenBoard[row][column] != blank)
         {
             if(hiddenBoard[row][column] == '0')
             {
@@ -261,11 +305,14 @@ void play(char mainBoard[row][column], char hiddenBoard[row][column])
                 switchPlayers(count);
             }
         }
-        else if (mainBoard[row][column] == '*')
+
+        else if (mainBoard[row][column] == mine)
         {
+            SetConsoleTextAttribute(hConsole, 12);
             cout << "This mine was found!" << endl;
             sleep(3);
         }
+
         else
         {
             mainBoard[row][column] = hiddenBoard[row][column];
@@ -279,16 +326,31 @@ void play(char mainBoard[row][column], char hiddenBoard[row][column])
 void switchPlayers(int& count)
 {
     if(count % 2)
-        cout << "It's " << secondPlayer << "'s turn!" << endl << endl;
+    {
+        SetConsoleTextAttribute(hConsole, 4);
+        cout << "It is " << secondPlayer << "'s turn!" << endl << endl;
+    }
     else
-        cout << "It's " << firstPlayer << "'s turn!" << endl << endl;
+    {
+        SetConsoleTextAttribute(hConsole, 1);
+        cout << "It is " << firstPlayer << "'s turn!" << endl << endl;
+    }
 
 }
 
-void checkExit()
+void checkExit(int count)
 {
     char ch = _getch();
-    if ((ch == 27) || (ch == 120) || (ch == 88))
-            exit(0);
+    if ((ch == 27) || (ch == 120) || (ch == 88)){
+            if(count % 2){
+                SetConsoleTextAttribute(hConsole, 10);
+                cout << "\n\n****** \"" << firstPlayer << "\" won the game! ******";
+                exit(0);
+            }else{
+                SetConsoleTextAttribute(hConsole, 10);
+                cout << "\n\n****** \"" << secondPlayer << "\" won the game! ******";
+                exit(0);
+            }
+    }
 }
 
