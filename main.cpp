@@ -1,3 +1,10 @@
+/*
+# minesweeper
+git: https://github.com/Mahdi-2mj/minesweeper.git
+contact : mahdi.2mj.2003@gmail.com
+*/
+
+
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
@@ -116,7 +123,6 @@ void getPlayersName(string &x, string &y)
     }
 }
 
-
 void boardGen(char board[row][column]){
     for(int i = 0; i < 9; i++){
         for(int j = 0; j < 9; j++)
@@ -156,20 +162,18 @@ void boardDisplay(char board[row][column]){
                 SetConsoleTextAttribute(hConsole, 14);
                 cout << board[i][j] <<  "   " ;
             }
-
         }
      cout << endl;
      }
      cout << endl;
+
      SetConsoleTextAttribute(hConsole, 2);
      cout << "There are " << minesNum << " mines in this game. Try to find them!" << endl << endl;
+
      SetConsoleTextAttribute(hConsole, 6);
      cout << "\t\t\t\t\t ScoreBoard:" << endl;
-    // cout << "\t\t\t\t\t----------------" << endl;
      cout << "\t\t\t\t\t|" << firstPlayer << " point: " << firstPlayerPoint << endl;
      cout << "\t\t\t\t\t|" << secondPlayer << " point: " << secondPlayerPoint << endl;
-    // cout << "\t\t\t\t\t----------------" << endl;
-
 }
 
 
@@ -319,7 +323,6 @@ void play(char mainBoard[row][column], char hiddenBoard[row][column])
             count++;
             switchPlayers(count);
         }
-
     }
 }
 
