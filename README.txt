@@ -1,4 +1,4 @@
-# minesweeper
+#minesweeper
 
 git: https://github.com/Mahdi-2mj/minesweeper.git
 
